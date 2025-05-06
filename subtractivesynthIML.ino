@@ -17,13 +17,10 @@ class IMLInterface : public InterfaceBase
 public:
     IMLInterface() : InterfaceBase() {}
 
-    void setup(size_t n_inputs, size_t n_outputs) override
+    void setup(size_t n_inputs, size_t n_outputs)
     {
-        InterfaceBase::setup(n_inputs, n_outputs);
+        InterfaceBase::setup(n_inputs, n_outputs, 0, 0);
         // Additional setup code specific to IMLInterface
-        n_inputs_ = n_inputs;
-        n_outputs_ = n_outputs;
-
         MLSetup_();
         n_iterations_ = 1000;
         input_state_.resize(n_inputs, 0.5f);
