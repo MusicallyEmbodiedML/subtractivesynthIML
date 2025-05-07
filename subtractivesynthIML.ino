@@ -3,6 +3,7 @@
 #include "src/memllib/audio/AudioDriver.hpp"
 #include "src/memllib/hardware/memlnaut/MEMLNaut.hpp"
 #include <memory>
+#include "src/memllib/interface/MIDI.hpp"
 
 // Includes for the IML interface
 #include "src/memlp/Dataset.hpp"
@@ -321,7 +322,7 @@ public:
 
         filter1freq = 80.f + (params[3] * params[3] * 5000.f);
         filter1res = (params[4] * 8.f);
-        
+
         lfo1freq = 0.1f + (params[5] * params[5] * 20.f);
         lfo1depth = params[6] * 0.5f;
 
@@ -417,7 +418,7 @@ void bind_interface(std::shared_ptr<IMLInterface> interface)
     });
 
     MEMLNaut::Instance()->setRVGain1Callback([interface] (float value) {
-        AudioDriver::setHeadphoneVolume(value);
+        AudioDriver::setDACVolume(value);
         Serial.println(value*4);
     });
 }
@@ -426,7 +427,7 @@ void bind_interface(std::shared_ptr<IMLInterface> interface)
 void setup()
 {
     Serial.begin(115200);
-    //while (!Serial) {}
+    while (!Serial) {}
     Serial.println("Serial initialised.");
     WRITE_VOLATILE(serial_ready, true);
 
@@ -434,10 +435,16 @@ void setup()
     MEMLNaut::Initialize();
     pinMode(33, OUTPUT);
 
+    // Setup MIDI
+    auto midi = std::make_shared<MIDI>();
+    midi->Setup(SubtractiveSynthAudioApp::kN_Params);
+    midi->SetMIDISendChannel(1);
+
     // Setup interface with memory barrier protection
     {
         auto temp_interface = std::make_shared<IMLInterface>();
         temp_interface->setup(kN_InputParams, SubtractiveSynthAudioApp::kN_Params);
+        temp_interface->SetMIDIInterface(midi);
         MEMORY_BARRIER();
         interface = temp_interface;
         MEMORY_BARRIER();
